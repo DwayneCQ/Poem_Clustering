@@ -50,7 +50,7 @@ def cluster(poems, labels):
     return clustered_poems
 
 
-def evaluate(tfidf_weight, lower=2, upper=100, steps=5):
+def evaluate_kmeans(tfidf_weight, lower=2, upper=100, steps=5):
     index = 0
     max_score = 0
     for i in range(lower, upper, steps):
@@ -62,6 +62,20 @@ def evaluate(tfidf_weight, lower=2, upper=100, steps=5):
             max_score = score
             index = i
     return index, max_score
+
+def evaluate_ac(tfidf_weight, lower=2, upper=100, steps=5):
+    index = 0
+    max_score = 0
+    for i in range(lower, upper, steps):
+        clustering = AgglomerativeClustering(n_clusters=i, linkage='average').fit(tfidf_weight.toarray())
+        labels = clustering.labels_
+        score = metrics.silhouette_score(tfidf_weight, labels, metric='euclidean')
+        print('簇数为{}时，轮廓系数得分为{}'.format(i, score))
+        if score > max_score:
+            max_score = score
+            index = i
+    return index, max_score
+
 
 
 def Traditional2Simplified(sentence):
@@ -89,26 +103,56 @@ def get_wordcloud(clustered_poems):
 
 
 poems = split_words()
+print('诗数：'.format(len(poems)))
 # print(poems['日詩'])
 # print(poems['登戎州江樓閑望'])
 tfidf_weight = tf_idf(poems.values())
 
-evaluate
-t0 = time.time()
-opt_cluster_num , opt_score = evaluate(tfidf_weight)
-print('最优的簇数为{},此时轮廓系数得分为{}'.format(opt_cluster_num, opt_score))
-print('评估用时{}秒'.format(time.time()-t0))
+# AC
 
+if evaluate:
+    t0 = time.time()
+    opt_cluster_num , opt_score = evaluate_ac(tfidf_weight)
+    print('最优的簇数为{},此时轮廓系数得分为{}'.format(opt_cluster_num, opt_score))
+    print('评估用时{}秒'.format(time.time()-t0))
+    t0 = time.time()
+    clustering = AgglomerativeClustering(n_clusters=opt_cluster_num, linkage='average')
+    clustering.fit(tfidf_weight.toarray())
+    print('聚类用时{}秒'.format(time.time()-t0))
+else:
+    t0 = time.time()
+    clustering = AgglomerativeClustering(n_clusters=5, linkage='average')
+    clustering.fit(tfidf_weight.toarray())
+    print('聚类用时{}秒'.format(time.time()-t0))
 
-
-t0 = time.time()
-kmeans = KMeans(init='k-means++', n_clusters=opt_cluster_num)
-kmeans.fit(tfidf_weight)
-print('聚类用时{}秒'.format(time.time()-t0))
-
-clustered_poems = cluster(poems, kmeans.labels_)
+clustered_poems = cluster(poems, clustering.labels_)
 for i in range(len(clustered_poems)):
     print('第{}个簇有{}首古诗'.format(i, len(clustered_poems[i])),end=' ')
 print()
+
+# kmeans
+#
+# if evaluate:
+#     t0 = time.time()
+#     opt_cluster_num, opt_score = evaluate_kmeans(tfidf_weight)
+#     print('最优的簇数为{},此时轮廓系数得分为{}'.format(opt_cluster_num, opt_score))
+#     print('评估用时{}秒'.format(time.time() - t0))
+#     t0 = time.time()
+#     kmeans = KMeans(init='k-means++', n_clusters=opt_cluster_num)
+#     kmeans.fit(tfidf_weight)
+#     print('聚类用时{}秒'.format(time.time() - t0))
+# else:
+#     t0 = time.time()
+#     kmeans = KMeans(init='k-means++', n_clusters=5)
+#     kmeans.fit(tfidf_weight)
+#     print('聚类用时{}秒'.format(time.time() - t0))
+#
+# clustered_poems = cluster(poems, kmeans.labels_)
+# for i in range(len(clustered_poems)):
+#     print('第{}个簇有{}首古诗'.format(i, len(clustered_poems[i])),end=' ')
+# print()
+
+# get wordcloud
+
 get_wordcloud(clustered_poems)
 

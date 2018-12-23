@@ -13,9 +13,12 @@ from sklearn.metrics.pairwise import pairwise_distances_argmin
 from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
 from langconv import *
 import datetime
+from sklearn.cluster import AgglomerativeClustering
 
 
 file_name = 'poet.song'
-poems_num = 1000
+poems_num = 5000
 stop_words = ['，', '。', '{', '}', '□', '(', ')', ]
 font_path = '/Users/DwayneChen/Desktop/Poem_Clustering/JDJH.TTF'
+evaluate = True
+# opt_cluster_num = 67
