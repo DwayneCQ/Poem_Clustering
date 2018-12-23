@@ -7,7 +7,6 @@ def split_words():
     split_poems = {}
     t0 = time.time()
     for poem, title in zip(poems, titles):
-        split_poem = []
         split_poem = jieba.lcut(poem)
         for stop_word in stop_words:
             while stop_word in split_poem:
@@ -90,9 +89,11 @@ def get_wordcloud(clustered_poems):
 
 
 poems = split_words()
+# print(poems['日詩'])
+# print(poems['登戎州江樓閑望'])
 tfidf_weight = tf_idf(poems.values())
 
-# evaluate
+evaluate
 t0 = time.time()
 opt_cluster_num , opt_score = evaluate(tfidf_weight)
 print('最优的簇数为{},此时轮廓系数得分为{}'.format(opt_cluster_num, opt_score))

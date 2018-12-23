@@ -14,7 +14,8 @@ from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
 from langconv import *
 import datetime
 
+
 file_name = 'poet.song'
-poems_num = 100000
+poems_num = 1000
 stop_words = ['，', '。', '{', '}', '□', '(', ')', ]
 font_path = '/Users/DwayneChen/Desktop/Poem_Clustering/JDJH.TTF'
