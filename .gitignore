@@ -6,3 +6,5 @@
 .png
 /pics
 *.pptx
+/.vscode
+/.ipynb_checkpoints

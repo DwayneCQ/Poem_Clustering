@@ -1,6 +1,5 @@
-from config import *
 import json_to_list
-from S_Dbw import *
+from config import *
 
 def split_words():
     poems,titles = json_to_list.json_to_list(file_name, poems_num)
@@ -63,13 +62,29 @@ def evaluate_kmeans(tfidf_weight, lower=2, upper=100, steps=5):
             index = i
     return index, max_score
 
+# def evaluate_ac(tfidf_weight, lower=2, upper=100, steps=5):
+#     index = 0
+#     max_score = 0
+#     for i in range(lower, upper, steps):
+#         clustering = AgglomerativeClustering(n_clusters=i, linkage='average').fit(tfidf_weight.toarray())
+#         labels = clustering.labels_
+#         score = metrics.silhouette_score(tfidf_weight, labels, metric='euclidean')
+#         print('簇数为{}时，轮廓系数得分为{}'.format(i, score))
+#         if score > max_score:
+#             max_score = score
+#             index = i
+#     return index, max_score
+
+
 def evaluate_ac(tfidf_weight, lower=2, upper=100, steps=5):
     index = 0
     max_score = 0
     for i in range(lower, upper, steps):
-        clustering = AgglomerativeClustering(n_clusters=i, linkage='average').fit(tfidf_weight.toarray())
+        clustering = AgglomerativeClustering(
+            n_clusters=i, linkage='average').fit(tfidf_weight.toarray())
         labels = clustering.labels_
-        score = metrics.silhouette_score(tfidf_weight, labels, metric='euclidean')
+        score = metrics.silhouette_score(
+            tfidf_weight, labels, metric='euclidean')
         print('簇数为{}时，轮廓系数得分为{}'.format(i, score))
         if score > max_score:
             max_score = score
@@ -101,12 +116,19 @@ def get_wordcloud(clustered_poems):
         wc.generate(words)
         wc.to_file('wordcloud_cluster_{}_{}.png'.format(cluster,datetime.datetime.now().strftime('%Y%m%d_%H%M%S')))
 
+def demension_reduce(tfidf_weight):
+    svd = TruncatedSVD(n_components = 100)
+    svd.fit(tfidf_weight)
+    return svd.components_
+
+
 
 poems = split_words()
-print('诗数：'.format(len(poems)))
+print('诗数：{}'.format(len(poems)))
 # print(poems['日詩'])
 # print(poems['登戎州江樓閑望'])
 tfidf_weight = tf_idf(poems.values())
+reduced = demension_reduce(tfidf_weight)
 
 # AC
 
@@ -117,12 +139,12 @@ if evaluate:
     print('评估用时{}秒'.format(time.time()-t0))
     t0 = time.time()
     clustering = AgglomerativeClustering(n_clusters=opt_cluster_num, linkage='average')
-    clustering.fit(tfidf_weight.toarray())
+    clustering.fit(reduced)
     print('聚类用时{}秒'.format(time.time()-t0))
 else:
     t0 = time.time()
     clustering = AgglomerativeClustering(n_clusters=5, linkage='average')
-    clustering.fit(tfidf_weight.toarray())
+    clustering.fit(reduced)
     print('聚类用时{}秒'.format(time.time()-t0))
 
 clustered_poems = cluster(poems, clustering.labels_)
@@ -131,7 +153,7 @@ for i in range(len(clustered_poems)):
 print()
 
 # kmeans
-#
+
 # if evaluate:
 #     t0 = time.time()
 #     opt_cluster_num, opt_score = evaluate_kmeans(tfidf_weight)
